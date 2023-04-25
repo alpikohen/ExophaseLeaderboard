@@ -92,8 +92,20 @@ message = str(epic_user_number[1]).split('>')
 message2 = message[1].split('<')
 epic_total = int(message2[0].replace(',', ''))
 
+exophase_username = "alpikohen"
+psn_username      = "alpikohen"
+xbox_username     = "alpikohen"
+steam_username    = "alpikohen"
+ea_username       = "alpikohenn"
+retro_username    = "alpikohen"
+gplay_username    = "alpikohen"
+gog_username      = "alpikohen"
+ubisoft_username  = "alpikohen"
+epic_username     = "alpikohen"
 
-url_user_general = "https://www.exophase.com/user/alpikohen/"
+exophase_url = "https://www.exophase.com/"
+
+url_user_general = exophase_url + "user/" + exophase_username
 response = requests.get(url_user_general)
 general_user_data = response.content
 soup = BeautifulSoup(general_user_data, "html.parser")
@@ -102,7 +114,7 @@ message = str(general_ranking).split('>')
 message2 = message[3].split('<')
 general_mine = int(message2[0].replace(',', ''))
 
-url_user_psn = "https://www.exophase.com/psn/user/alpikohen/"
+url_user_psn = exophase_url + "psn/user/" + psn_username
 response = requests.get(url_user_psn)
 psn_user_data = response.content
 soup = BeautifulSoup(psn_user_data, "html.parser")
@@ -111,7 +123,7 @@ message = str(psn_ranking).split('>')
 message2 = message[3].split('<')
 psn_mine = int(message2[0].replace(',', ''))
 
-url_user_xbox = "https://www.exophase.com/xbox/user/alpikohen/"
+url_user_xbox = exophase_url + "xbox/user/" + xbox_username
 response = requests.get(url_user_xbox)
 xbox_user_data = response.content
 soup = BeautifulSoup(xbox_user_data, "html.parser")
@@ -120,7 +132,7 @@ message = str(xbox_ranking).split('>')
 message2 = message[3].split('<')
 xbox_mine = int(message2[0].replace(',', ''))
 
-url_user_steam= "https://www.exophase.com/steam/user/alpikohen/"
+url_user_steam = exophase_url + "steam/user/" + steam_username
 response = requests.get(url_user_steam)
 steam_user_data = response.content
 soup = BeautifulSoup(steam_user_data, "html.parser")
@@ -129,7 +141,7 @@ message = str(steam_ranking).split('>')
 message2 = message[3].split('<')
 steam_mine = int(message2[0].replace(',', ''))
 
-url_user_ea = "https://www.exophase.com/origin/user/alpikohenn/"
+url_user_ea = exophase_url + "origin/user/" + ea_username
 response = requests.get(url_user_ea)
 ea_user_data = response.content
 soup = BeautifulSoup(ea_user_data, "html.parser")
@@ -138,7 +150,7 @@ message = str(ea_ranking).split('>')
 message2 = message[3].split('<')
 ea_mine = int(message2[0].replace(',', ''))
 
-url_user_retro = "https://www.exophase.com/retro/user/alpikohen/"
+url_user_retro = exophase_url + "retro/user/" + retro_username
 response = requests.get(url_user_retro)
 retro_user_data = response.content
 soup = BeautifulSoup(retro_user_data, "html.parser")
@@ -147,7 +159,7 @@ message = str(retro_ranking).split('>')
 message2 = message[3].split('<')
 retro_mine = int(message2[0].replace(',', ''))
 
-url_user_gplay = "https://www.exophase.com/android/user/alpikohen/"
+url_user_gplay = exophase_url + "android/user/" + gplay_username
 response = requests.get(url_user_gplay)
 gplay_user_data = response.content
 soup = BeautifulSoup(gplay_user_data, "html.parser")
@@ -156,7 +168,7 @@ message = str(gplay_ranking).split('>')
 message2 = message[3].split('<')
 gplay_mine = int(message2[0].replace(',', ''))
 
-url_user_gog = "https://www.exophase.com/gog/user/alpikohen/"
+url_user_gog = exophase_url + "gog/user/" + gog_username
 response = requests.get(url_user_gog)
 gog_user_data = response.content
 soup = BeautifulSoup(gog_user_data, "html.parser")
@@ -165,7 +177,7 @@ message = str(gog_ranking).split('>')
 message2 = message[3].split('<')
 gog_mine = int(message2[0].replace(',', ''))
 
-url_user_ubisoft = "https://www.exophase.com/uplay/user/alpikohen/"
+url_user_ubisoft = exophase_url + "uplay/user/" + ubisoft_username
 response = requests.get(url_user_ubisoft)
 ubisoft_user_data = response.content
 soup = BeautifulSoup(ubisoft_user_data, "html.parser")
@@ -174,7 +186,7 @@ message = str(ubisoft_ranking).split('>')
 message2 = message[3].split('<')
 ubisoft_mine = int(message2[0].replace(',', ''))
 
-url_user_epic = "https://www.exophase.com/epic/user/alpikohen/"
+url_user_epic = exophase_url + "epic/user/" + epic_username
 response = requests.get(url_user_epic)
 epic_user_data = response.content
 soup = BeautifulSoup(epic_user_data, "html.parser")
