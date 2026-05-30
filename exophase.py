@@ -3,6 +3,7 @@ import cloudscraper
 from bs4 import BeautifulSoup
 from datetime import datetime
 from configparser import ConfigParser
+import os
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
@@ -181,45 +182,68 @@ ws['C2'] = "My Ranking"
 ws['D2'] = "Total Players"
 ws['E2'] = "My Percentage"
 ws['F2'] = "Status"
+ws['G2'] = "Previous Percentage"
 
-# Populate platform data from scraped information using loop
-row = 3
+# Collect platform data for sorting
+platform_data = []
 for platform in PLATFORMS:
-    ws[f'B{row}'] = platform['display']
-    ws[f'D{row}'] = totals[platform['key']]
-    
     # Check if username is empty (skipped)
     if not platform['username'] or platform['username'].strip() == '':
-        ws[f'C{row}'] = "N/A"
+        percentage = float('inf')  # Put skipped platforms at the end
+        ranking = "N/A"
+        status = "Skipped"
+    else:
+        ranking = mines[platform['key']]
+        if totals[platform['key']] > 0:
+            percentage = round((mines[platform['key']] / totals[platform['key']]) * 100, 2)
+        else:
+            percentage = 0
+        status = None  # Will be filled later
+    
+    platform_data.append({
+        'platform': platform,
+        'ranking': ranking,
+        'percentage': percentage,
+        'totals': totals[platform['key']],
+        'status': status
+    })
+
+# Sort by percentage (ascending - lowest first, skipped platforms last)
+platform_data.sort(key=lambda x: x['percentage'])
+
+# Populate platform data from scraped information in sorted order
+row = 3
+for data in platform_data:
+    ws[f'B{row}'] = data['platform']['display']
+    ws[f'C{row}'] = data['ranking']
+    ws[f'D{row}'] = data['totals']
+    
+    if data['status'] == "Skipped":
         ws[f'E{row}'] = "N/A"
         ws[f'F{row}'] = "Skipped"
     else:
-        ws[f'C{row}'] = mines[platform['key']]
-        if totals[platform['key']] > 0:
-            ws[f'E{row}'] = round((mines[platform['key']] / totals[platform['key']]) * 100, 2)
-        else:
-            ws[f'E{row}'] = 0
+        ws[f'E{row}'] = data['percentage']
     
     row += 1
 
 # Add general totals (all platforms combined)
-ws['B16'] = "Total"
-ws['D16'] = totals['general']
+ws['B15'] = "Total"
+ws['D15'] = totals['general']
 
 # Check if general username is empty (skipped)
 if not GENERAL_USERNAME or GENERAL_USERNAME.strip() == '':
-    ws['C16'] = "N/A"
-    ws['E16'] = "N/A"
-    ws['F16'] = "Skipped"
+    ws['C15'] = "N/A"
+    ws['E15'] = "N/A"
+    ws['F15'] = "Skipped"
 else:
-    ws['C16'] = mines['general']
+    ws['C15'] = mines['general']
     if totals['general'] > 0:
-        ws['E16'] = round((mines['general'] / totals['general']) * 100, 2)
+        ws['E15'] = round((mines['general'] / totals['general']) * 100, 2)
     else:
-        ws['E16'] = 0
+        ws['E15'] = 0
 
-# Align columns B, C, D, E, F to center horizontally
-for row in ws.iter_rows(min_col=2, max_col=6, min_row=1, max_row=ws.max_row):
+# Align columns B, C, D, E, F, G to center horizontally
+for row in ws.iter_rows(min_col=2, max_col=7, min_row=1, max_row=ws.max_row):
     for cell in row:
         cell.alignment = Alignment(horizontal='center')
 
@@ -240,8 +264,8 @@ for col in range(1, ws.max_column + 1):
     cell = ws.cell(row=2, column=col)
     cell.font = Font(bold=True)
 
-# Make column B (Platform names) italic from B3 to B16 (excluding header B2)
-for row in ws.iter_rows(min_col=2, max_col=2, min_row=3, max_row=15):
+# Make column B (Platform names) italic from B3 to B14 (excluding header B2 and Total B15)
+for row in ws.iter_rows(min_col=2, max_col=2, min_row=3, max_row=14):
     for cell in row:
         cell.font = Font(italic=True)
 
@@ -289,6 +313,76 @@ if percentage_values:
     for row_num, value in percentage_values:
         color = get_gradient_color(value, min_val, max_val)
         ws[f'E{row_num}'].fill = PatternFill(start_color=color, end_color=color, fill_type="solid")
+
+# Load previous percentage data from existing file if it exists
+# Create a mapping of platform display names to previous percentages
+previous_percentages = {}
+previous_total_percentage = None
+if os.path.exists("Achievement_Track.xlsx"):
+    try:
+        old_wb = load_workbook("Achievement_Track.xlsx")
+        old_ws = old_wb.active
+        
+        # Read all platform data from old file and create a mapping by display name
+        # Assuming platforms are in rows 3-14 in old file
+        for row_num in range(3, 15):
+            platform_name = old_ws[f'B{row_num}'].value
+            old_value = old_ws[f'E{row_num}'].value
+            if platform_name and old_value is not None and old_value != "N/A":
+                previous_percentages[platform_name] = old_value
+        
+        # Also read Total row (row 15) previous percentage
+        old_total_name = old_ws['B15'].value
+        if old_total_name == "Total":
+            old_total_value = old_ws['E15'].value
+            if old_total_value is not None and old_total_value != "N/A":
+                previous_total_percentage = old_total_value
+    except Exception as e:
+        print(f"Warning: Could not read previous percentage data: {e}")
+
+# Populate G column (Previous Percentage) for each platform using sorted data
+# row variable already points to the next available row after platforms
+row = 3
+for data in platform_data:
+    platform_display = data['platform']['display']
+    if platform_display in previous_percentages:
+        ws[f'G{row}'] = previous_percentages[platform_display]
+    else:
+        ws[f'G{row}'] = "N/A"
+    row += 1
+
+# Add previous percentage for Total row
+if previous_total_percentage is not None:
+    ws['G15'] = previous_total_percentage
+else:
+    ws['G15'] = "N/A"
+
+# Update Status column (F) based on comparison of My Percentage (E) and Previous Percentage (G)
+for row_num in range(3, 17):  # Include Total row (row 15) and beyond if needed
+    # Skip if status is already "Skipped"
+    if ws[f'F{row_num}'].value == "Skipped":
+        continue
+    
+    current_pct = ws[f'E{row_num}'].value
+    previous_pct = ws[f'G{row_num}'].value
+    
+    # Compare percentages if both are numeric values
+    if isinstance(current_pct, (int, float)) and isinstance(previous_pct, (int, float)):
+        if current_pct > previous_pct:
+            ws[f'F{row_num}'] = "↓"  # Down arrow for Increased
+            ws[f'F{row_num}'].font = Font(color="000000", bold=True)  # Black text
+            ws[f'F{row_num}'].fill = PatternFill(start_color="FF0000", end_color="FF0000", fill_type="solid")  # Red background
+        elif current_pct < previous_pct:
+            ws[f'F{row_num}'] = "↑"  # Up arrow for Decreased
+            ws[f'F{row_num}'].font = Font(color="000000", bold=True)  # Black text
+            ws[f'F{row_num}'].fill = PatternFill(start_color="00B050", end_color="00B050", fill_type="solid")  # Green background
+        else:
+            ws[f'F{row_num}'] = "="  # Equals for Same
+            ws[f'F{row_num}'].font = Font(color="000000", bold=True)  # Black text
+            ws[f'F{row_num}'].fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")  # Yellow background
+    else:
+        # If no previous data exists, leave empty
+        ws[f'F{row_num}'] = ""
 
 # Save the workbook to file
 wb.save("Achievement_Track.xlsx")
